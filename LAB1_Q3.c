@@ -4,11 +4,6 @@
 
 #define MAX_SIZE 10000
 
-// --------------------------------------------------
-// Bubble Sort Version 1
-// Stops if array becomes sorted before n-1 passes
-// --------------------------------------------------
-
 long long bubbleSortEarly(int arr[], int n)
 {
     long long comparisons = 0;
@@ -39,10 +34,6 @@ long long bubbleSortEarly(int arr[], int n)
     return comparisons;
 }
 
-// --------------------------------------------------
-// Bubble Sort Version 2
-// Always completes n-1 passes
-// --------------------------------------------------
 
 long long bubbleSortNormal(int arr[], int n)
 {
@@ -66,9 +57,6 @@ long long bubbleSortNormal(int arr[], int n)
     return comparisons;
 }
 
-// --------------------------------------------------
-// Generate random array
-// --------------------------------------------------
 
 void generateArray(int arr[], int n)
 {
@@ -77,10 +65,6 @@ void generateArray(int arr[], int n)
         arr[i] = rand() % 100000;
     }
 }
-
-// --------------------------------------------------
-// Main
-// --------------------------------------------------
 
 int main()
 {
