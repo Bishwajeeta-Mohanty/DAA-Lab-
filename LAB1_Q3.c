@@ -113,11 +113,6 @@ int main()
 
     printf("\nVersion 2 - Normal Bubble Sort\n");
     printf("Comparisons = %lld\n", comparisons2);
-
-    // ------------------------------------------
-    // Generate data for plotting
-    // ------------------------------------------
-
     FILE *fp = fopen("bubble_sort_data.csv", "w");
 
     if (fp == NULL)
