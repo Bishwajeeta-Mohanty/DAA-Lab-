@@ -2,13 +2,11 @@
 
 int findDefective(int coins[], int left, int right)
 {
-    // One coin remains
     if (left == right)
         return left;
 
     int n = right - left + 1;
 
-    // Two coins
     if (n == 2)
     {
         if (coins[left] < coins[right])
@@ -17,7 +15,7 @@ int findDefective(int coins[], int left, int right)
         if (coins[right] < coins[left])
             return right;
 
-        return -1;   // Both have equal weight
+        return -1; 
     }
 
     int mid = (left + right) / 2;
@@ -31,15 +29,12 @@ int findDefective(int coins[], int left, int right)
     for (int i = mid + 1; i <= right; i++)
         rightSum += coins[i];
 
-    // Left side is lighter
     if (leftSum < rightSum)
         return findDefective(coins, left, mid);
 
-    // Right side is lighter
     if (rightSum < leftSum)
         return findDefective(coins, mid + 1, right);
 
-    // Both sides have equal weight
     return -1;
 }
 
