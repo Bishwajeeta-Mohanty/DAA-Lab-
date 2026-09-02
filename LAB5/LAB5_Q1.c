@@ -75,4 +75,4 @@ int main()
     printf("Median = %.2f\n", median);
 
     return 0;
-}
+} 
