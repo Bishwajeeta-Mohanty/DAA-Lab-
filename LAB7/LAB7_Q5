@@ -1,0 +1,138 @@
+#include <stdio.h>
+
+int main()
+{
+    int n;
+
+    printf("Enter number of hiding spots: ");
+    scanf("%d", &n);
+
+    if (n <= 1)
+    {
+        printf("Number of hiding spots must be greater than 1.\n");
+        return 0;
+    }
+
+    printf("\nShooting sequence:\n");
+
+    
+    if (n == 2)
+    {
+        printf("1 1\n");
+    }
+    else
+    {
+        
+        for (int i = 2; i <= n - 1; i++)
+            printf("%d ", i);
+
+        
+        for (int i = n - 1; i >= 2; i--)
+            printf("%d ", i);
+
+        printf("\n");
+    }
+
+    
+    int possible[n + 1];
+
+    for (int i = 1; i <= n; i++)
+        possible[i] = 1;
+
+    int shots;
+
+    if (n == 2)
+        shots = 2;
+    else
+        shots = 2 * (n - 2);
+
+    int shot;
+
+    if (n == 2)
+    {
+        for (int s = 1; s <= 2; s++)
+        {
+            shot = 1;
+
+           
+            possible[shot] = 0;
+
+            
+            int next[n + 1];
+
+            for (int i = 1; i <= n; i++)
+                next[i] = 0;
+
+            for (int i = 1; i <= n; i++)
+            {
+                if (possible[i])
+                {
+                    if (i > 1)
+                        next[i - 1] = 1;
+
+                    if (i < n)
+                        next[i + 1] = 1;
+                }
+            }
+
+            for (int i = 1; i <= n; i++)
+                possible[i] = next[i];
+        }
+    }
+    else
+    {
+        int sequence[2 * n];
+
+        int k = 0;
+
+        for (int i = 2; i <= n - 1; i++)
+            sequence[k++] = i;
+
+        for (int i = n - 1; i >= 2; i--)
+            sequence[k++] = i;
+
+        for (int s = 0; s < k; s++)
+        {
+            shot = sequence[s];
+
+            
+            possible[shot] = 0;
+
+            int next[n + 1];
+
+            for (int i = 1; i <= n; i++)
+                next[i] = 0;
+
+            
+            for (int i = 1; i <= n; i++)
+            {
+                if (possible[i])
+                {
+                    if (i > 1)
+                        next[i - 1] = 1;
+
+                    if (i < n)
+                        next[i + 1] = 1;
+                }
+            }
+
+            for (int i = 1; i <= n; i++)
+                possible[i] = next[i];
+        }
+    }
+
+    int remaining = 0;
+
+    for (int i = 1; i <= n; i++)
+    {
+        if (possible[i])
+            remaining++;
+    }
+
+    if (remaining == 0)
+        printf("\nThe strategy guarantees hitting the target.\n");
+    else
+        printf("\nThe target can still survive.\n");
+
+    return 0;
+}
