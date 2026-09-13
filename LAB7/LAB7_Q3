@@ -1,0 +1,56 @@
+#include <stdio.h>
+#include <limits.h>
+
+#define MAX 100
+
+long long hanoi3[MAX];
+long long dp[MAX];
+int split[MAX];
+
+int main()
+{
+    int n;
+
+    printf("Enter number of disks: ");
+    scanf("%d", &n);
+
+    hanoi3[0] = 0;
+
+    for (int i = 1; i <= n; i++)
+    {
+        hanoi3[i] = 2 * hanoi3[i - 1] + 1;
+    }
+
+    dp[0] = 0;
+
+    if (n >= 1)
+    {
+        dp[1] = 1;
+        split[1] = 0;
+    }
+
+    for (int i = 2; i <= n; i++)
+    {
+        dp[i] = LLONG_MAX;
+
+        for (int k = 1; k < i; k++)
+        {
+            long long moves;
+
+            moves = 2 * dp[k] + hanoi3[i - k];
+
+            if (moves < dp[i])
+            {
+                dp[i] = moves;
+                split[i] = k;
+            }
+        }
+    }
+
+    printf("\nMinimum number of moves = %lld\n", dp[n]);
+
+    printf("Optimal split for %d disks = %d disks\n",
+           n, split[n]);
+
+    return 0;
+}
