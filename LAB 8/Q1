@@ -1,0 +1,57 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define INF 999999
+
+int minCoinChange(int coins[], int n, int V)
+{
+    int dp[V + 1];
+
+    dp[0] = 0;
+
+    for (int i = 1; i <= V; i++)
+        dp[i] = INF;
+
+    for (int i = 1; i <= V; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            if (coins[j] <= i && dp[i - coins[j]] != INF)
+            {
+                if (dp[i - coins[j]] + 1 < dp[i])
+                    dp[i] = dp[i - coins[j]] + 1;
+            }
+        }
+    }
+
+    if (dp[V] == INF)
+        return -1;
+
+    return dp[V];
+}
+
+int main()
+{
+    int n, V;
+
+    printf("Enter number of coin denominations: ");
+    scanf("%d", &n);
+
+    int coins[n];
+
+    printf("Enter coin denominations:\n");
+    for (int i = 0; i < n; i++)
+        scanf("%d", &coins[i]);
+
+    printf("Enter target amount: ");
+    scanf("%d", &V);
+
+    int result = minCoinChange(coins, n, V);
+
+    if (result == -1)
+        printf("Minimum coins required = -1\n");
+    else
+        printf("Minimum coins required = %d\n", result);
+
+    return 0;
+}
