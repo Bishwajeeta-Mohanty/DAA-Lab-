@@ -1,0 +1,73 @@
+#include <stdio.h>
+
+#define MAX 100
+
+int main()
+{
+    int A[MAX];
+    int dp[MAX];
+    int parent[MAX];
+
+    int n;
+
+    printf("Enter number of elements: ");
+    scanf("%d", &n);
+
+    printf("Enter the elements:\n");
+
+    for (int i = 0; i < n; i++)
+    {
+        scanf("%d", &A[i]);
+        dp[i] = 1;
+        parent[i] = -1;
+    }
+
+    for (int i = 1; i < n; i++)
+    {
+        for (int j = 0; j < i; j++)
+        {
+            if (A[j] < A[i] && dp[j] + 1 > dp[i])
+            {
+                dp[i] = dp[j] + 1;
+                parent[i] = j;
+            }
+        }
+    }
+
+    int maxLength = dp[0];
+    int maxIndex = 0;
+
+    for (int i = 1; i < n; i++)
+    {
+        if (dp[i] > maxLength)
+        {
+            maxLength = dp[i];
+            maxIndex = i;
+        }
+    }
+
+    int lis[MAX];
+    int index = maxLength - 1;
+
+    int current = maxIndex;
+
+    while (current != -1)
+    {
+        lis[index] = A[current];
+        index--;
+        current = parent[current];
+    }
+
+    printf("\nLength of LIS = %d\n", maxLength);
+
+    printf("Longest Increasing Subsequence = ");
+
+    for (int i = 0; i < maxLength; i++)
+    {
+        printf("%d ", lis[i]);
+    }
+
+    printf("\n");
+
+    return 0;
+}
