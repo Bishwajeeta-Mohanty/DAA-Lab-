@@ -1,0 +1,51 @@
+#include <stdio.h>
+
+int main()
+{
+    int n, V;
+
+    printf("Enter number of coin denominations: ");
+    scanf("%d", &n);
+
+    int coins[n];
+
+    printf("Enter coin denominations:\n");
+    for (int i = 0; i < n; i++)
+    {
+        scanf("%d", &coins[i]);
+
+        if (coins[i] <= 0)
+        {
+            printf("Coin denominations must be positive.\n");
+            return 1;
+        }
+    }
+
+    printf("Enter target amount: ");
+    scanf("%d", &V);
+
+    if (V < 0)
+    {
+        printf("Target amount must be non-negative.\n");
+        return 1;
+    }
+
+    long long dp[V + 1];
+
+    for (int i = 0; i <= V; i++)
+        dp[i] = 0;
+
+    dp[0] = 1;
+
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = coins[i]; j <= V; j++)
+        {
+            dp[j] += dp[j - coins[i]];
+        }
+    }
+
+    printf("Total number of ways = %lld\n", dp[V]);
+
+    return 0;
+}
