@@ -1,0 +1,125 @@
+#include <stdio.h>
+#include <string.h>
+
+#define MAX 100
+
+int min3(int a, int b, int c)
+{
+    int min = a;
+
+    if (b < min)
+        min = b;
+
+    if (c < min)
+        min = c;
+
+    return min;
+}
+
+int main()
+{
+    char A[MAX], B[MAX];
+
+    int dp[MAX + 1][MAX + 1];
+    char parent[MAX + 1][MAX + 1];
+
+    printf("Enter first string: ");
+    scanf("%s", A);
+
+    printf("Enter second string: ");
+    scanf("%s", B);
+
+    int m = strlen(A);
+    int n = strlen(B);
+
+    for (int i = 0; i <= m; i++)
+    {
+        dp[i][0] = i;
+
+        if (i > 0)
+            parent[i][0] = 'D';
+    }
+
+    for (int j = 0; j <= n; j++)
+    {
+        dp[0][j] = j;
+
+        if (j > 0)
+            parent[0][j] = 'I';
+    }
+
+    for (int i = 1; i <= m; i++)
+    {
+        for (int j = 1; j <= n; j++)
+        {
+            if (A[i - 1] == B[j - 1])
+            {
+                dp[i][j] = dp[i - 1][j - 1];
+                parent[i][j] = 'M';
+            }
+            else
+            {
+                int deletion = dp[i - 1][j] + 1;
+                int insertion = dp[i][j - 1] + 1;
+                int substitution = dp[i - 1][j - 1] + 1;
+
+                dp[i][j] = min3(deletion, insertion, substitution);
+
+                if (dp[i][j] == substitution)
+                    parent[i][j] = 'S';
+                else if (dp[i][j] == deletion)
+                    parent[i][j] = 'D';
+                else
+                    parent[i][j] = 'I';
+            }
+        }
+    }
+
+    printf("\nMinimum Edit Distance = %d\n", dp[m][n]);
+
+    printf("\nTraceback Operations:\n");
+
+    int i = m;
+    int j = n;
+
+    char operations[MAX * 2];
+    int count = 0;
+
+    while (i > 0 || j > 0)
+    {
+        if (i > 0 && j > 0 && parent[i][j] == 'M')
+        {
+            operations[count++] = 'M';
+            i--;
+            j--;
+        }
+        else if (i > 0 && j > 0 && parent[i][j] == 'S')
+        {
+            printf("Substitute %c -> %c\n",
+                   A[i - 1], B[j - 1]);
+
+            operations[count++] = 'S';
+
+            i--;
+            j--;
+        }
+        else if (i > 0 && parent[i][j] == 'D')
+        {
+            printf("Delete %c\n", A[i - 1]);
+
+            operations[count++] = 'D';
+
+            i--;
+        }
+        else if (j > 0 && parent[i][j] == 'I')
+        {
+            printf("Insert %c\n", B[j - 1]);
+
+            operations[count++] = 'I';
+
+            j--;
+        }
+    }
+
+    return 0;
+}
