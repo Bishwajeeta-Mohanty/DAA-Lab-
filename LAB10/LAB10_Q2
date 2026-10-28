@@ -1,0 +1,124 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+
+int dr[] = {-1, 1, 0, 0};
+int dc[] = {0, 0, -1, 1};
+
+
+typedef struct {
+    int* parent;
+    int* rank;
+    int rows;
+    int cols;
+} GridDSU;
+
+
+GridDSU* createGridDSU(int R, int C) {
+    GridDSU* dsu = malloc(sizeof(GridDSU));
+    dsu->rows = R;
+    dsu->cols = C;
+    int totalCells = R * C;
+    
+    dsu->parent = malloc(totalCells * sizeof(int));
+    dsu->rank = malloc(totalCells * sizeof(int));
+    
+    for (int i = 0; i < totalCells; i++) {
+        dsu->parent[i] = -1; // -1 denotes water
+        dsu->rank[i] = 0;
+    }
+    return dsu;
+}
+
+
+int dsu_find(GridDSU* dsu, int i) {
+    if (dsu->parent[i] == i)
+        return i;
+    return dsu->parent[i] = dsu_find(dsu, dsu->parent[i]);
+}
+
+
+bool dsu_union(GridDSU* dsu, int i, int j) {
+    int root_i = dsu_find(dsu, i);
+    int root_j = dsu_find(dsu, j);
+    
+    if (root_i != root_j) {
+        if (dsu->rank[root_i] < dsu->rank[root_j]) {
+            dsu->parent[root_i] = root_j;
+        } else {
+            dsu->parent[root_j] = root_i;
+            if (dsu->rank[root_i] == dsu->rank[root_j]) {
+                dsu->rank[root_i]++;
+            }
+        }
+        return true; 
+    }
+    return false;
+}
+
+
+void freeGridDSU(GridDSU* dsu) {
+    free(dsu->parent);
+    free(dsu->rank);
+    free(dsu);
+}
+
+
+void numIslands2(int R, int C, int positions[][2], int K) {
+    GridDSU* dsu = createGridDSU(R, C);
+    int islandCount = 0;
+
+    printf("\n--- Dynamic Connected Components Grid Log ---\n");
+    
+    for (int i = 0; i < K; i++) {
+        int r = positions[i][0];
+        int c = positions[i][1];
+        int idx = r * C + c;
+
+        
+        if (dsu->parent[idx] != -1) {
+            printf("Operation %d: Added Land at (%d, %d) -> Total Islands: %d\n", i + 1, r, c, islandCount);
+            continue;
+        }
+
+        
+        dsu->parent[idx] = idx;
+        islandCount++;
+
+        
+        for (int d = 0; d < 4; d++) {
+            int nr = r + dr[d];
+            int nc = c + dc[d];
+            int nIdx = nr * C + nc;
+
+           
+            if (nr >= 0 && nr < R && nc >= 0 && nc < C && dsu->parent[nIdx] != -1) {
+                if (dsu_union(dsu, idx, nIdx)) {
+                    islandCount--;
+            }
+        }
+        printf("Operation %d: Added Land at (%d, %d) -> Total Islands: %d\n", i + 1, r, c, islandCount);
+    }
+
+    freeGridDSU(dsu);
+}
+
+int main() {
+    int rows = 3;
+    int cols = 3;
+    
+   
+    int positions[][2] = {
+        {0, 0}, 
+        {0, 1}, 
+        {1, 2}, 
+        {2, 1}, 
+        {1, 1}  
+    };
+    int K = sizeof(positions) / sizeof(positions[0]);
+
+    numIslands2(rows, cols, positions, K);
+
+    return 0;
+}
