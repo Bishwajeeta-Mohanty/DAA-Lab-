@@ -1,0 +1,198 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+#define HASH_SIZE 200003 
+
+
+typedef struct {
+    char word[MAX_L];
+    bool is_occupied;
+} HashEntry;
+
+
+HashEntry dict_hash[HASH_SIZE];
+
+
+unsigned int get_hash(const char* str) {
+    unsigned int hash = 5381;
+    while (*str) {
+        hash = ((hash << 5) + hash) + *str;
+        str++;
+    }
+    return hash % HASH_SIZE;
+}
+
+
+void hash_insert(const char* word) {
+    unsigned int idx = get_hash(word);
+    while (dict_hash[idx].is_occupied) {
+        if (strcmp(dict_hash[idx].word, word) == 0) return;
+    }
+    strcpy(dict_hash[idx].word, word);
+    dict_hash[idx].is_occupied = true;
+}
+
+
+bool hash_search(const char* word) {
+    unsigned int idx = get_hash(word);
+    while (dict_hash[idx].is_occupied) {
+        if (strcmp(dict_hash[idx].word, word) == 0) return true;
+        idx = (idx + 1) % HASH_SIZE;
+    }
+    return false;
+}
+
+
+typedef struct {
+    char word[MAX_L];
+    int steps;
+    bool is_occupied;
+} VisitedEntry;
+
+unsigned int get_visited_hash(const char* str, int size) {
+    return get_hash(str) % size;
+}
+
+void visited_insert(VisitedEntry* table, int size, const char* word, int steps) {
+    unsigned int idx = get_hash(word) % size;
+    while (table[idx].is_occupied) {
+        if (strcmp(table[idx].word, word) == 0) return;
+        idx = (idx + 1) % size;
+    }
+    strcpy(table[idx].word, word);
+    table[idx].steps = steps;
+    table[idx].is_occupied = true;
+}
+
+int visited_search(VisitedEntry* table, int size, const char* word) {
+    unsigned int idx = get_hash(word) % size;
+    while (table[idx].is_occupied) {
+        if (strcmp(table[idx].word, word) == 0) return table[idx].steps;
+        idx = (idx + 1) % size;
+    }
+    return -1;
+}
+
+
+typedef struct {
+    char (*data)[MAX_L];
+    int front;
+    int rear;
+} Queue;
+
+
+int ladderLength(const char* beginWord, const char* endWord) {
+    
+    if (!hash_search(endWord)) return -1;
+    if (strcmp(beginWord, endWord) == 0) return 0;
+
+    int L = strlen(beginWord);
+    
+    
+    Queue q_forward = { malloc(HASH_SIZE * MAX_L), 0, 0 };
+    Queue q_backward = { malloc(HASH_SIZE * MAX_L), 0, 0 };
+    
+    int visited_size = HASH_SIZE;
+    VisitedEntry* visited_forward = calloc(visited_size, sizeof(VisitedEntry));
+    VisitedEntry* visited_backward = calloc(visited_size, sizeof(VisitedEntry));
+
+    
+    strcpy(q_forward.data[q_forward.rear++], beginWord);
+    visited_insert(visited_forward, visited_size, beginWord, 0);
+
+    
+    strcpy(q_backward.data[q_backward.rear++], endWord);
+    visited_insert(visited_backward, visited_size, endWord, 0);
+
+    
+    while (q_forward.front < q_forward.rear && q_backward.front < q_backward.rear) {
+        
+       
+        Queue* q_curr;
+        VisitedEntry* visited_curr;
+        VisitedEntry* visited_other;
+        
+        if ((q_forward.rear - q_forward.front) <= (q_backward.rear - q_backward.front)) {
+            q_curr = &q_forward;
+            visited_curr = visited_forward;
+            visited_other = visited_backward;
+        } else {
+            q_curr = &q_backward;
+            visited_curr = visited_backward;
+            visited_other = visited_forward;
+        }
+
+        int level_size = q_curr->rear - q_curr->front;
+        for (int i = 0; i < level_size; i++) {
+            char curr_word[MAX_L];
+            strcpy(curr_word, q_curr->data[q_curr->front++]);
+            int curr_steps = visited_search(visited_curr, visited_size, curr_word);
+
+            
+            char next_word[MAX_L];
+            strcpy(next_word, curr_word);
+            
+            for (int j = 0; j < L; j++) {
+                char original_char = next_word[j];
+                for (char c = 'a'; c <= 'z'; c++) {
+                    if (c == original_char) continue;
+                    next_word[j] = c;
+
+                    
+                    if (hash_search(next_word)) {
+                        
+                        int steps_other = visited_search(visited_other, visited_size, next_word);
+                        if (steps_other != -1) {
+                            int total_mutations = curr_steps + 1 + steps_other;
+                            
+                            
+                            free(q_forward.data); free(q_backward.data);
+                            free(visited_forward); free(visited_backward);
+                            return total_mutations;
+                        }
+
+                        
+                        if (visited_search(visited_curr, visited_size, next_word) == -1) {
+                            visited_insert(visited_curr, visited_size, next_word, curr_steps + 1);
+                            strcpy(q_curr->data[q_curr->rear++], next_word);
+                        }
+                    }
+                }
+                next_word[j] = original_char; 
+            }
+        }
+    }
+
+    
+    free(q_forward.data); free(q_backward.data);
+    free(visited_forward); free(visited_backward);
+    return -1;
+}
+
+int main() {
+    
+    memset(dict_hash, 0, sizeof(dict_hash));
+
+   
+    char* dictionary[] = {"hot", "dot", "dog", "lot", "log", "cog"};
+    int dict_count = sizeof(dictionary) / sizeof(dictionary[0]);
+    for (int i = 0; i < dict_count; i++) {
+        hash_insert(dictionary[i]);
+    }
+
+    char beginWord[] = "hit";
+    char endWord[] = "cog";
+
+    int steps = ladderLength(beginWord, endWord);
+
+    printf("Minimum number of mutations (k): %d\n", steps);
+    if (steps != -1) {
+        printf("Transformation sequence length (words): %d\n", steps + 1);
+    } else {
+        printf("No valid transformation path exists.\n");
+    }
+
+    return 0;
+}
