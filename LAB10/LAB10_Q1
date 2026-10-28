@@ -1,0 +1,112 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+
+typedef struct {
+    int* parent;
+    int* parity;
+    int* rank;
+} DSU;
+
+
+DSU* createDSU(int V) {
+    DSU* dsu = malloc(sizeof(DSU));
+    dsu->parent = malloc((V + 1) * sizeof(int));
+    dsu->parity = malloc((V + 1) * sizeof(int));
+    dsu->rank = malloc((V + 1) * sizeof(int));
+
+    for (int i = 0; i <= V; i++) {
+        dsu->parent[i] = i;
+        dsu->parity[i] = 0;
+        dsu->rank[i] = 0;
+    }
+    return dsu;
+}
+
+
+int dsu_find(DSU* dsu, int i, int* p_out) {
+    if (dsu->parent[i] == i) {
+        *p_out = 0;
+        return i;
+    }
+    
+    int p_parent;
+    int root = dsu_find(dsu, dsu->parent[i], &p_parent);
+    
+    
+    dsu->parity[i] = dsu->parity[i] ^ p_parent;
+    dsu->parent[i] = root;
+    
+    *p_out = dsu->parity[i];
+    return root;
+}
+
+
+bool addEdgeOnline(DSU* dsu, int u, int v) {
+    int parity_u, parity_v;
+    int root_u = dsu_find(dsu, u, &parity_u);
+    int root_v = dsu_find(dsu, v, &parity_v);
+
+    if (root_u == root_v) {
+        if ((parity_u ^ parity_v) == 0) {
+            return false; 
+        }
+        return true; 
+    }
+
+    
+    if (dsu->rank[root_u] < dsu->rank[root_v]) {
+        dsu->parent[root_u] = root_v;
+        dsu->parity[root_u] = parity_u ^ parity_v ^ 1;
+    } else {
+        dsu->parent[root_v] = root_u;
+        dsu->parity[root_v] = parity_u ^ parity_v ^ 1;
+        if (dsu->rank[root_u] == dsu->rank[root_v]) {
+            dsu->rank[root_u]++;
+        }
+    }
+    return true;
+}
+
+
+void freeDSU(DSU* dsu) {
+    free(dsu->parent);
+    free(dsu->parity);
+    free(dsu->rank);
+    free(dsu);
+}
+
+int main() {
+    int numVertices = 5;
+    DSU* dsu = createDSU(numVertices);
+
+    
+    int edges[][2] = {
+        {1, 2},
+        {2, 3},
+        {3, 4},
+        {4, 1}, 
+        {1, 3}, 
+        {4, 5},
+        {3, 5}  
+    };
+    int totalEdges = sizeof(edges) / sizeof(edges[0]);
+
+    printf("--- Online Bipartiteness Testing Stream ---\n");
+    for (int i = 0; i < totalEdges; i++) {
+        int u = edges[i][0];
+        int v = edges[i][1];
+        
+        bool accepted = addEdgeOnline(dsu, u, v);
+        
+        if (accepted) {
+            printf("Edge (%d, %d): [ACCEPTED] Graph remains bipartite.\n", u, v);
+        } else {
+            printf("Edge (%d, %d): [REJECTED] Violates bipartiteness (Odd cycle detected)!\n", u, v);
+        }
+    }
+
+    freeDSU(dsu);
+    return 0;
+}
