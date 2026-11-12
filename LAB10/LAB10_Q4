@@ -1,0 +1,241 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX 100005
+
+int parent[MAX], size[MAX], active[MAX], version[MAX];
+long long sum[MAX];
+
+int head[MAX], to[2 * MAX], next[2 * MAX];
+int edgeCount = 0;
+
+typedef struct
+{
+    long long value;
+    int root;
+    int version;
+} Node;
+
+Node *heap;
+int heapSize = 0;
+
+void addEdge(int u, int v)
+{
+    to[edgeCount] = v;
+    next[edgeCount] = head[u];
+    head[u] = edgeCount++;
+
+    to[edgeCount] = u;
+    next[edgeCount] = head[v];
+    head[v] = edgeCount++;
+}
+
+int find(int x)
+{
+    if (parent[x] != x)
+        parent[x] = find(parent[x]);
+
+    return parent[x];
+}
+
+void push(long long value, int root, int ver)
+{
+    int i = ++heapSize;
+
+    while (i > 1 && heap[i / 2].value < value)
+    {
+        heap[i] = heap[i / 2];
+        i /= 2;
+    }
+
+    heap[i].value = value;
+    heap[i].root = root;
+    heap[i].version = ver;
+}
+
+void pop()
+{
+    Node last = heap[heapSize--];
+    int i = 1;
+
+    while (i * 2 <= heapSize)
+    {
+        int child = i * 2;
+
+        if (child + 1 <= heapSize &&
+            heap[child + 1].value > heap[child].value)
+            child++;
+
+        if (heap[child].value <= last.value)
+            break;
+
+        heap[i] = heap[child];
+        i = child;
+    }
+
+    if (heapSize > 0)
+        heap[i] = last;
+}
+
+void cleanHeap()
+{
+    while (heapSize > 0)
+    {
+        int r = heap[1].root;
+
+        if (active[r] && parent[r] == r &&
+            version[r] == heap[1].version)
+            break;
+
+        pop();
+    }
+}
+
+void unite(int u, int v)
+{
+    int a = find(u);
+    int b = find(v);
+
+    if (a == b)
+        return;
+
+    if (size[a] < size[b])
+    {
+        int temp = a;
+        a = b;
+        b = temp;
+    }
+
+    parent[b] = a;
+
+    size[a] += size[b];
+    sum[a] += sum[b];
+
+    version[a]++;
+
+    push(sum[a], a, version[a]);
+}
+
+void activate(int v, long long weight)
+{
+    active[v] = 1;
+    parent[v] = v;
+    size[v] = 1;
+    sum[v] = weight;
+    version[v]++;
+
+    push(sum[v], v, version[v]);
+
+    for (int e = head[v]; e != -1; e = next[e])
+    {
+        int u = to[e];
+
+        if (active[u])
+            unite(v, u);
+    }
+}
+
+int getMaximum(long long *answer)
+{
+    cleanHeap();
+
+    if (heapSize == 0)
+        return 0;
+
+    *answer = heap[1].value;
+    return 1;
+}
+
+int main()
+{
+    int n, m;
+    long long weight[MAX];
+    int p[MAX];
+    long long answer[MAX];
+
+    printf("Enter number of vertices and edges: ");
+    scanf("%d %d", &n, &m);
+
+    if (n <= 0 || n >= MAX || m < 0 ||
+        m >= MAX / 2)
+    {
+        printf("Invalid input.\n");
+        return 1;
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+        head[i] = -1;
+        parent[i] = i;
+        size[i] = 0;
+        active[i] = 0;
+        version[i] = 0;
+    }
+
+    printf("Enter vertex weights:\n");
+
+    for (int i = 0; i < n; i++)
+        scanf("%lld", &weight[i]);
+
+    printf("Enter edges (u v), using vertices 1 to n:\n");
+
+    for (int i = 0; i < m; i++)
+    {
+        int u, v;
+        scanf("%d %d", &u, &v);
+
+        if (u < 1 || u > n || v < 1 || v > n)
+        {
+            printf("Invalid edge.\n");
+            return 1;
+        }
+
+        addEdge(u - 1, v - 1);
+    }
+
+    printf("Enter deletion order:\n");
+
+    for (int i = 1; i <= n; i++)
+    {
+        scanf("%d", &p[i]);
+
+        if (p[i] < 1 || p[i] > n)
+        {
+            printf("Invalid deletion order.\n");
+            return 1;
+        }
+        p[i]--;
+    }
+
+    heap = malloc((n + m + 5) * sizeof(Node));
+
+    if (heap == NULL)
+    {
+        printf("Memory allocation failed.\n");
+        return 1;
+    }
+    for (int i = n; i >= 1; i--)
+    {
+        if (!getMaximum(&answer[i]))
+            answer[i] = 0;
+        else
+            answer[i] = heap[1].value;
+
+        activate(p[i], weight[p[i]]);
+    }
+
+    printf("\nMaximum component weight after each deletion:\n");
+
+    for (int i = 1; i <= n; i++)
+    {
+        if (i == n)
+            printf("After deletion %d: No components remain.\n", i);
+        else
+            printf("After deletion %d: %lld\n", i, answer[i]);
+    }
+
+    free(heap);
+
+    return 0;
+}
