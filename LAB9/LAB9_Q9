@@ -1,0 +1,153 @@
+
+#include <stdio.h>
+#include <limits.h>
+
+#define MAX 1000
+
+long long weight[2 * MAX];
+int leftChild[2 * MAX];
+int rightChild[2 * MAX];
+int type[2 * MAX];
+int sequence[MAX];
+int depth[MAX];
+
+int nodeCount;
+long long totalCost = 0;
+
+void findDepth(int node, int level)
+{
+    if (leftChild[node] == -1 && rightChild[node] == -1)
+    {
+        depth[node] = level;
+        return;
+    }
+
+    if (leftChild[node] != -1)
+        findDepth(leftChild[node], level + 1);
+
+    if (rightChild[node] != -1)
+        findDepth(rightChild[node], level + 1);
+}
+
+int main()
+{
+    int n, i, j, k;
+    int count;
+    int bestI, bestJ;
+    int compatible;
+    long long minSum, sum;
+
+    printf("Enter number of weights: ");
+    scanf("%d", &n);
+
+    if (n < 1 || n > MAX)
+    {
+        printf("Invalid number of weights.\n");
+        return 0;
+    }
+
+    count = n;
+    nodeCount = n;
+
+    printf("Enter the weights in order:\n");
+
+    for (i = 0; i < n; i++)
+    {
+        scanf("%lld", &weight[i]);
+
+        if (weight[i] < 0)
+        {
+            printf("Weights must be non-negative.\n");
+            return 0;
+        }
+
+        leftChild[i] = -1;
+        rightChild[i] = -1;
+        type[i] = 1;
+        sequence[i] = i;
+    }
+
+    printf("\nHu-Tucker Merge Sequence:\n");
+
+    while (count > 1)
+    {
+        minSum = LLONG_MAX;
+        bestI = -1;
+        bestJ = -1;
+
+        for (i = 0; i < count; i++)
+        {
+            for (j = i + 1; j < count; j++)
+            {
+                compatible = 1;
+
+                /* Original leaves between i and j
+                   make the pair incompatible */
+                for (k = i + 1; k < j; k++)
+                {
+                    if (type[sequence[k]] == 1)
+                    {
+                        compatible = 0;
+                        break;
+                    }
+                }
+
+                if (compatible)
+                {
+                    sum = weight[sequence[i]]
+                        + weight[sequence[j]];
+
+                    /* Leftmost pair wins in a tie */
+                    if (sum < minSum)
+                    {
+                        minSum = sum;
+                        bestI = i;
+                        bestJ = j;
+                    }
+                }
+            }
+        }
+
+        if (bestI == -1)
+        {
+            printf("No compatible pair found.\n");
+            return 0;
+        }
+
+        int a = sequence[bestI];
+        int b = sequence[bestJ];
+        int parent = nodeCount++;
+
+        weight[parent] = weight[a] + weight[b];
+        leftChild[parent] = a;
+        rightChild[parent] = b;
+        type[parent] = 0;
+
+        printf("%lld + %lld = %lld\n",
+               weight[a], weight[b], weight[parent]);
+
+        totalCost += weight[parent];
+
+        sequence[bestI] = parent;
+
+        for (i = bestJ; i < count - 1; i++)
+            sequence[i] = sequence[i + 1];
+
+        count--;
+    }
+
+    printf("\nMinimum Weighted Cost = %lld\n", totalCost);
+
+    for (i = 0; i < n; i++)
+        depth[i] = 0;
+
+    findDepth(sequence[0], 0);
+
+    printf("\nOriginal Leaf Levels:\n");
+
+    for (i = 0; i < n; i++)
+        printf("Weight %lld : Depth %d\n",
+               weight[i], depth[i]);
+
+    return 0;
+}
