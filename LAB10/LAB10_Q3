@@ -1,0 +1,110 @@
+
+#include <stdio.h>
+#include <limits.h>
+
+#define MAX 1000
+
+int parent[MAX], size[MAX];
+long long sum[MAX];
+
+int find(int x)
+{
+    if (parent[x] != x)
+        parent[x] = find(parent[x]);
+
+    return parent[x];
+}
+
+void unite(int u, int v)
+{
+    int rootU = find(u);
+    int rootV = find(v);
+
+    if (rootU == rootV)
+        return;
+
+    if (size[rootU] < size[rootV])
+    {
+        int temp = rootU;
+        rootU = rootV;
+        rootV = temp;
+    }
+
+    parent[rootV] = rootU;
+
+    size[rootU] += size[rootV];
+    sum[rootU] += sum[rootV];
+}
+
+long long maximumWeight(int n, int K)
+{
+    long long maximum = LLONG_MIN;
+
+    for (int i = 0; i < n; i++)
+    {
+        if (parent[i] == i && size[i] <= K)
+        {
+            if (sum[i] > maximum)
+                maximum = sum[i];
+        }
+    }
+
+    return maximum;
+}
+
+int main()
+{
+    int n, m, K;
+    int u, v;
+
+    printf("Enter number of vertices: ");
+    scanf("%d", &n);
+
+    printf("Enter number of edges: ");
+    scanf("%d", &m);
+
+    printf("Enter maximum component size K: ");
+    scanf("%d", &K);
+
+    if (n <= 0 || n >= MAX || m < 0 || K <= 0)
+    {
+        printf("Invalid input.\n");
+        return 1;
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+        parent[i] = i;
+        size[i] = 1;
+
+        printf("Enter weight of vertex %d: ", i);
+        scanf("%lld", &sum[i]);
+    }
+
+    printf("\nMaximum weight after each edge:\n");
+
+    for (int i = 0; i < m; i++)
+    {
+        printf("\nEnter edge (u v): ");
+        scanf("%d %d", &u, &v);
+
+        if (u < 0 || u >= n || v < 0 || v >= n)
+        {
+            printf("Invalid edge. Try again.\n");
+            i--;
+            continue;
+        }
+
+        unite(u, v);
+
+        long long ans = maximumWeight(n, K);
+
+        if (ans == LLONG_MIN)
+            printf("No valid component exists.\n");
+        else
+            printf("After edge %d: Maximum weight = %lld\n",
+                   i + 1, ans);
+    }
+
+    return 0;
+}
