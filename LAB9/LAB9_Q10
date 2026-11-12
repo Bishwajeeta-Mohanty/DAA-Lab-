@@ -1,0 +1,200 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_STRINGS 100
+#define MAX_LENGTH 10000
+
+char *strings[MAX_STRINGS];
+int findOverlap(const char *a, const char *b)
+{
+    int n = strlen(a);
+    int m = strlen(b);
+    int *pi = malloc(m * sizeof(int));
+
+    if (pi == NULL)
+        return 0;
+    pi[0] = 0;
+
+    for (int i = 1, j = 0; i < m; i++)
+    {
+        while (j > 0 && b[i] != b[j])
+            j = pi[j - 1];
+
+        if (b[i] == b[j])
+            j++;
+
+        pi[i] = j;
+    }
+    int j = 0;
+
+    for (int i = 0; i < n; i++)
+    {
+        while (j > 0 && (j == m || a[i] != b[j]))
+            j = pi[j - 1];
+
+        if (a[i] == b[j])
+            j++;
+    }
+
+    free(pi);
+    return j;
+}
+char *mergeStrings(const char *a, const char *b, int overlap)
+{
+    int lenA = strlen(a);
+    int lenB = strlen(b);
+
+    char *result = malloc(lenA + lenB - overlap + 1);
+
+    if (result == NULL)
+        return NULL;
+
+    strcpy(result, a);
+    strcpy(result + lenA, b + overlap);
+
+    return result;
+}
+void removeContainedStrings(int *n)
+{
+    int remove[MAX_STRINGS] = {0};
+
+    for (int i = 0; i < *n; i++)
+    {
+        for (int j = 0; j < *n; j++)
+        {
+            if (i == j)
+                continue;
+
+            int lenI = strlen(strings[i]);
+            int lenJ = strlen(strings[j]);
+
+            if (lenJ > lenI ||
+                (lenJ == lenI && j < i))
+            {
+                if (strstr(strings[j], strings[i]) != NULL)
+                {
+                    remove[i] = 1;
+                    break;
+                }
+            }
+        }
+    }
+
+    int newN = 0;
+
+    for (int i = 0; i < *n; i++)
+    {
+        if (remove[i])
+        {
+            free(strings[i]);
+        }
+        else
+        {
+            strings[newN++] = strings[i];
+        }
+    }
+
+    *n = newN;
+}
+
+int main()
+{
+    int n;
+
+    printf("Enter number of strings: ");
+    scanf("%d", &n);
+
+    if (n < 1 || n > MAX_STRINGS)
+    {
+        printf("Invalid number of strings.\n");
+        return 0;
+    }
+
+    char temp[MAX_LENGTH + 1];
+
+    printf("Enter the strings:\n");
+
+    for (int i = 0; i < n; i++)
+    {
+        scanf("%10000s", temp);
+
+        strings[i] = malloc(strlen(temp) + 1);
+
+        if (strings[i] == NULL)
+        {
+            printf("Memory allocation failed.\n");
+            return 1;
+        }
+
+        strcpy(strings[i], temp);
+    }
+    removeContainedStrings(&n);
+
+    printf("\nAfter removing contained strings:\n");
+
+    for (int i = 0; i < n; i++)
+        printf("%s\n", strings[i]);
+
+    while (n > 1)
+    {
+        int maxOverlap = -1;
+        int bestI = -1;
+        int bestJ = -1;
+
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = 0; j < n; j++)
+            {
+                if (i == j)
+                    continue;
+
+                int overlap = findOverlap(strings[i], strings[j]);
+
+                if (overlap > maxOverlap)
+                {
+                    maxOverlap = overlap;
+                    bestI = i;
+                    bestJ = j;
+                }
+            }
+        }
+
+        printf("\nSelected pair: %s and %s\n",
+               strings[bestI], strings[bestJ]);
+
+        printf("Maximum overlap = %d\n", maxOverlap);
+
+        char *merged = mergeStrings(
+            strings[bestI],
+            strings[bestJ],
+            maxOverlap
+        );
+
+        if (merged == NULL)
+        {
+            printf("Memory allocation failed.\n");
+            return 1;
+        }
+
+        printf("Merged string = %s\n", merged);
+
+        free(strings[bestI]);
+        free(strings[bestJ]);
+
+        strings[bestI] = merged;
+
+        for (int i = bestJ; i < n - 1; i++)
+            strings[i] = strings[i + 1];
+
+        n--;
+    }
+
+    printf("\nFinal Greedy Superstring: %s\n", strings[0]);
+    printf("Length of superstring: %zu\n", strlen(strings[0]));
+
+    free(strings[0]);
+
+    return 0;
+}
